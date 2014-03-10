@@ -133,7 +133,7 @@ for source in dataSource:
             fixedpoints = 0
         else:
             fixedpoints = int(player.cssselect('.team')[0].text_content().strip())
-        row = {
+        row_player = {
             'player_id' : player.get('personid'),
             'player_name' : player.cssselect('.name')[0].get('title'),
             'player_points' : fixedpoints,
@@ -143,11 +143,11 @@ for source in dataSource:
             'player_captain' : ('Ja' if player.get('personid') == CaptainID else 'Nee'),
             'player_team' : get_teamname(tree),
             'player_teamid' : source, 
-            'player_round' : RoundInfo,
+            'player_round' : RoundInfo
         }
 
         #Store the retrieve data in this loop/iteration to the database
-        data.sqlite.save(unique_keys=['player_team', 'player_round', 'player_id'], data=row, table_name="pcteamplayers")
+        data.sqlite.save(unique_keys=['player_team', 'player_round', 'player_id'], row_player, table_name="pcteamplayers")
 
     #Query above data to get extra details for the team information
     rawbench = data.sqlite.select("sum(player_pntscor) as bnchscore from pcteamplayers where player_teamid = '" + source + "' and player_round='" + RoundInfo + "' and player_position='Bankspeler'" )
