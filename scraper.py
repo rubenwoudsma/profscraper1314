@@ -143,7 +143,7 @@ for source in dataSource:
             'player_captain' : ('Ja' if player.get('personid') == CaptainID else 'Nee'),
             'player_team' : get_teamname(tree),
             'player_teamid' : source, 
-            'player_round' : RoundInfo
+            'player_round' : RoundInfo,
         }
 
         #Store the retrieve data in this loop/iteration to the database
