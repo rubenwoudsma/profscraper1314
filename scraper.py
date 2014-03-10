@@ -147,7 +147,8 @@ for source in dataSource:
         }
 
         #Store the retrieve data in this loop/iteration to the database
-        data.sqlite.save(unique_keys=['player_team', 'player_round', 'player_id'], row_player, table_name="pcteamplayers")
+        unique_keys = ['player_team', 'player_round', 'player_id']
+        data.sqlite.save(unique_keys, row_player, table_name="pcteamplayers")
 
     #Query above data to get extra details for the team information
     rawbench = data.sqlite.select("sum(player_pntscor) as bnchscore from pcteamplayers where player_teamid = '" + source + "' and player_round='" + RoundInfo + "' and player_position='Bankspeler'" )
