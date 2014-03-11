@@ -115,16 +115,14 @@ for source in dataSource:
     CaptainID = html[html.find("updateCaptain('")+15:html.find("'", html.find("updateCaptain('")+15)]
     RoundInfo = html[html.find("Opstelling van ")+15:html.find("</h3>", html.find("Opstelling van ")+16)]
     
-    print 'CaptainID ' , CaptainID
-    print 'RoundInfo ' , RoundInfo
+    #print 'CaptainID ' , CaptainID
+    #print 'RoundInfo ' , RoundInfo
     
     # Read out the data
     tree = lxml.html.fromstring(html)
     
     #Read out the Teamscore
     scores = tree.cssselect('.box')
-    #print ', '.join(scores)
-    print scores[0]
     RoundScore = (int(scores[0].cssselect('span')[0].text_content().strip()) if is_number(scores[0].cssselect('span')[0].text_content().strip())  else 0)
     RoundPosition = scores[1].cssselect('span')[0].text_content().strip()
     RoundTotalScore = int(scores[2].cssselect('span')[0].text_content().strip().replace(".", ""))
@@ -157,7 +155,7 @@ for source in dataSource:
     #Query above data to get extra details for the team information
     rawbench = scraperwiki.sqlite.select("sum(player_pntscor) as bnchscore from pcteamplayers where player_teamid = '" + source + "' and player_round='" + RoundInfo + "' and player_position='Bankspeler'" )
     rawplayers = scraperwiki.sqlite.select("* from pcteamplayers where player_teamid = '" + source + "' and player_round='" + RoundInfo + "'" )
-    rawbestplayer = scraperwiki.sqlite.select("max(player_pntscor) as best from pcteamplayers where player_teamid = ?",source)
+    rawbestplayer = scraperwiki.sqlite.select("max(player_pntscor) as best from pcteamplayers where player_teamid = '" + source + "'" )
     #Make calculation for the best team and system used
     i443 = (((getmax(rawplayers, 'Keeper', 1)+getmax(rawplayers, 'Verdediger', 4)+getmax(rawplayers, 'Middenvelder', 3)+getmax(rawplayers, 'Aanvaller', 3))-rawbestplayer[0]['best'])+(2*rawbestplayer[0]['best']))
     i442 = (((getmax(rawplayers, 'Keeper', 1)+getmax(rawplayers, 'Verdediger', 4)+getmax(rawplayers, 'Middenvelder', 4)+getmax(rawplayers, 'Aanvaller', 2))-rawbestplayer[0]['best'])+(2*rawbestplayer[0]['best']))
