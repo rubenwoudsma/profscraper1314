@@ -70,7 +70,7 @@ br.set_cookiejar(cj)
 
 # Browser options
 br.set_handle_equiv(True)
-br.set_handle_gzip(True)
+#br.set_handle_gzip(True)
 br.set_handle_redirect(True)
 br.set_handle_referer(True)
 br.set_handle_robots(False)
@@ -115,13 +115,16 @@ for source in dataSource:
     CaptainID = html[html.find("updateCaptain('")+15:html.find("'", html.find("updateCaptain('")+15)]
     RoundInfo = html[html.find("Opstelling van ")+15:html.find("</h3>", html.find("Opstelling van ")+16)]
     
+    print 'CaptainID ' . CaptainID
+    print 'RoundInfo ' . RoundInfo
+    
     # Read out the data
     tree = lxml.html.fromstring(html)
     
     #Read out the Teamscore
     scores = tree.cssselect('.box')
     #print ', '.join(scores)
-    print scores
+    print scores[0]
     RoundScore = (int(scores[0].cssselect('span')[0].text_content().strip()) if is_number(scores[0].cssselect('span')[0].text_content().strip())  else 0)
     RoundPosition = scores[1].cssselect('span')[0].text_content().strip()
     RoundTotalScore = int(scores[2].cssselect('span')[0].text_content().strip().replace(".", ""))
