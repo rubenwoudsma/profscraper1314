@@ -152,12 +152,12 @@ for source in dataSource:
 
         #Store the retrieve data in this loop/iteration to the database
         unique_keys = ['player_team', 'player_round', 'player_id']
-        data.sqlite.save(unique_keys, data=row_player, table_name="pcteamplayers")
+        scraperwiki.sqlite.save(unique_keys, data=row_player, table_name="pcteamplayers")
 
     #Query above data to get extra details for the team information
-    rawbench = data.sqlite.select("sum(player_pntscor) as bnchscore from pcteamplayers where player_teamid = '" + source + "' and player_round='" + RoundInfo + "' and player_position='Bankspeler'" )
-    rawplayers = data.sqlite.select("* from pcteamplayers where player_teamid = '" + source + "' and player_round='" + RoundInfo + "'" )
-    rawbestplayer = data.sqlite.select("max(player_pntscor) as best from pcteamplayers where player_teamid = ?",source)
+    rawbench = scraperwiki.sqlite.select("sum(player_pntscor) as bnchscore from pcteamplayers where player_teamid = '" + source + "' and player_round='" + RoundInfo + "' and player_position='Bankspeler'" )
+    rawplayers = scraperwiki.sqlite.select("* from pcteamplayers where player_teamid = '" + source + "' and player_round='" + RoundInfo + "'" )
+    rawbestplayer = scraperwiki.sqlite.select("max(player_pntscor) as best from pcteamplayers where player_teamid = ?",source)
     #Make calculation for the best team and system used
     i443 = (((getmax(rawplayers, 'Keeper', 1)+getmax(rawplayers, 'Verdediger', 4)+getmax(rawplayers, 'Middenvelder', 3)+getmax(rawplayers, 'Aanvaller', 3))-rawbestplayer[0]['best'])+(2*rawbestplayer[0]['best']))
     i442 = (((getmax(rawplayers, 'Keeper', 1)+getmax(rawplayers, 'Verdediger', 4)+getmax(rawplayers, 'Middenvelder', 4)+getmax(rawplayers, 'Aanvaller', 2))-rawbestplayer[0]['best'])+(2*rawbestplayer[0]['best']))
@@ -166,12 +166,12 @@ for source in dataSource:
 
     #Fix lack of update of profcoach.nl due to incompleteness of round
     #Solution: Replace the 'RoundScore' with the variable 'baseplayersfix' in the save when saving the datastore
-    baseplayersfix = data.sqlite.select("sum(player_pntscor) as basescore from pcteamplayers where player_teamid = '" + source + "' and player_round='" + RoundInfo + "' and player_position='Basisspeler'" )
+    baseplayersfix = scraperwiki.sqlite.select("sum(player_pntscor) as basescore from pcteamplayers where player_teamid = '" + source + "' and player_round='" + RoundInfo + "' and player_position='Basisspeler'" )
 
     #Calculate the best team and get the corresponding system from the list
     sMaxScore = max((i443), (i442), (i343), (i352))
     sBstSyst = aSyst[index_max([i443, i442, i343, i352])]
 
     # Now single datastore for the team information
-    data.sqlite.save(unique_keys=["team_name", "team_round"], data={"team_id": source, "team_name":get_teamname(tree), "team_round":RoundInfo, "team_roundscore":RoundScore, "team_totalscore": RoundTotalScore, "team_roundposition":RoundPosition, "team_benchscore": rawbench[0]['bnchscore'] ,"team_maxscore":sMaxScore, "team_bestsystem":sBstSyst}, table_name = "pcteams")
+    scraperwiki.sqlite.save(unique_keys=["team_name", "team_round"], data={"team_id": source, "team_name":get_teamname(tree), "team_round":RoundInfo, "team_roundscore":RoundScore, "team_totalscore": RoundTotalScore, "team_roundposition":RoundPosition, "team_benchscore": rawbench[0]['bnchscore'] ,"team_maxscore":sMaxScore, "team_bestsystem":sBstSyst}, table_name = "pcteams")
     print "Succesfully scraped the details for manager: ", get_teamname(tree)
