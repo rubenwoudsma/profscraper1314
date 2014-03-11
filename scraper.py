@@ -115,8 +115,8 @@ for source in dataSource:
     CaptainID = html[html.find("updateCaptain('")+15:html.find("'", html.find("updateCaptain('")+15)]
     RoundInfo = html[html.find("Opstelling van ")+15:html.find("</h3>", html.find("Opstelling van ")+16)]
     
-    print 'CaptainID ' . CaptainID
-    print 'RoundInfo ' . RoundInfo
+    print 'CaptainID ' , CaptainID
+    print 'RoundInfo ' , RoundInfo
     
     # Read out the data
     tree = lxml.html.fromstring(html)
