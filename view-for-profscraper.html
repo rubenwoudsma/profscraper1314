@@ -151,19 +151,21 @@
             // The URL here is the URL of the SQLLite API.
             // Other information is used to query the dataset.
 
-            var apiurl = "https://api.scraperwiki.com/api/1.0/datastore/sqlite";
-            var srcname = "profscraper1314";
+            var apimorph = "https://api.morph.io/rubenwoudsma/profscraper1314/data.json";
+            var morphkey = "TNBd3rYa1tgWDy0ZYSux";
+            
             var sqlselect = "select team_name, team_roundscore, team_benchscore, team_maxscore, team_round, team_totalscore from pcteams where team_round in (select distinct team_round from pcteams order by CAST(replace(team_round, 'speelronde ', '') AS SIGNED) desc limit 1) order by team_roundscore desc, team_benchscore desc";
             var sqlselectplayers = "select player_name, count(*) as in_teams, sum(player_captain = 'Ja') as iscaptain, sum(player_position = 'Basisspeler') as opgesteld from pcteamplayers where player_round in (select distinct team_round from pcteams order by CAST(replace(team_round, 'speelronde ', '') AS SIGNED) desc limit 1) group by player_name order by in_teams desc limit 12";
-            var sqlpcrounds = "select distinct team_round from pcteams order by CAST(replace(team_round, 'speelronde ', '') AS SIGNED) limit 20";
+            var sqlpcrounds = "select distinct team_round from pcteams order by CAST(replace(team_round, 'speelronde ', '') AS SIGNED) limit 30";
             var sqlextrainfo = "select t1.team_name, t1.team_round, t1.team_totalscore as current_rndscore, t2.team_totalscore as previous_rndscore from pcteams t1 join pcteams t2 on t1.team_id = t2.team_id and t2.team_round in (select t2.team_round from pcteams t2 where t2.team_id == t1.team_id order by CAST(replace(t2.team_round, 'speelronde ', '') AS SIGNED) desc limit 1 offset 1) where t1.team_round in ( select distinct t3.team_round from pcteams t3 order by CAST(replace(t3.team_round, 'speelronde ', '') AS SIGNED) desc limit 1 ) limit 20";
 
             console.log ('start AJAX calls for JSONLISTS');
-            $.ajax({url:apiurl, data:{name:srcname, query:sqlselect, format:"jsonlist"}, dataType:"jsonp", success:ProcessTeamInfo, error: ProcessError });
-            $.ajax({url:apiurl, data:{name:srcname, query:sqlselectplayers, format:"jsonlist"}, dataType:"jsonp", success:ProcessPlayerInfo, error: ProcessError });
-            $.ajax({url:apiurl, data:{name:srcname, query:sqlpcrounds, format:"jsonlist"}, dataType:"jsonp", success:FillSelectList, error: ProcessError });
-            $.ajax({url:apiurl, data:{name:srcname, query:sqlextrainfo, format:"jsonlist"}, dataType:"jsonp", success:ProcessAdditionalInfo, error: ProcessError });
-
+            
+						$.ajax({url: apimorph + "?key=" + morphkey + "&query=" + encodeURI(sqlselect), dataType: 'jsonp', success:ProcessTeamInfo, error: ProcessError });
+						$.ajax({url: apimorph + "?key=" + morphkey + "&query=" + encodeURI(sqlselectplayers), dataType: 'jsonp', success:ProcessPlayerInfo, error: ProcessError });
+						$.ajax({url: apimorph + "?key=" + morphkey + "&query=" + encodeURI(sqlpcrounds), dataType: 'jsonp', success:FillSelectList, error: ProcessError });
+						$.ajax({url: apimorph + "?key=" + morphkey + "&query=" + encodeURI(sqlextrainfo), dataType: 'jsonp', success:ProcessAdditionalInfo, error: ProcessError });
+            
             jQuery('#loadingcont').hide();
         }
 
@@ -172,14 +174,15 @@
             console.log ('START: refreshing displayed information with data for: ' + SpecificPlayRound);
             jQuery("#loadingcont").show();
 
-            var apiurl = "https://api.scraperwiki.com/api/1.0/datastore/sqlite";
-            var srcname = "profscraper1314";
+            var apimorph = "https://api.morph.io/rubenwoudsma/profscraper1314/data.json";
+            var morphkey = "TNBd3rYa1tgWDy0ZYSux";
+
             var sqlselect = "select team_name, team_roundscore, team_benchscore, team_maxscore, team_round, team_totalscore from pcteams where team_round = '" + SpecificPlayRound + "' order by team_roundscore desc, team_benchscore desc";
             var sqlselectplayers = "select player_name, count(*) as in_teams, sum(player_captain = 'Ja') as iscaptain, sum(player_position = 'Basisspeler') as opgesteld from pcteamplayers where player_round = '" + SpecificPlayRound + "' group by player_name order by in_teams desc limit 12";
 
-            $.ajax({url:apiurl, data:{name:srcname, query:sqlselect, format:"jsonlist"}, dataType:"jsonp", success:ProcessTeamInfo, error: ProcessError });
-            $.ajax({url:apiurl, data:{name:srcname, query:sqlselectplayers, format:"jsonlist"}, dataType:"jsonp", success:ProcessPlayerInfo, error: ProcessError });
-
+						$.ajax({url: apimorph + "?key=" + morphkey + "&query=" + encodeURI(sqlselect), dataType: 'jsonp', success:ProcessTeamInfo, error: ProcessError });
+						$.ajax({url: apimorph + "?key=" + morphkey + "&query=" + encodeURI(sqlselectplayers), dataType: 'jsonp', success:ProcessPlayerInfo, error: ProcessError });
+						
             jQuery('#loadingcont').hide();
 
             console.log ('END: refreshing displayed information with data for: ' + SpecificPlayRound);
@@ -189,8 +192,8 @@
         function FillSelectList(tdata) {
             var PlayRound;
 
-            jQuery.each(tdata.data, function(key, value){
-                $('#PCRoundSelection').append('<option val="' + value + '">' + value + '</option>');
+            jQuery.each(tdata, function(key, value){
+                $('#PCRoundSelection').append('<option val="' + value.team_round + '">' + value.team_round + '</option>');
             });
 
             $( "#round-selection" ).submit(function( event ) {
@@ -203,6 +206,7 @@
 
         function ProcessTeamInfo(tdata) {
             console.log ('START: Processing teaminformation');
+
             var weekwinner, winnerscore, winnerbench, winnereff;
             var gerardname, gerardscore, gerardbench, gerardeff;
             var weekmaxwinner, weekmaxscore = 0, weekmaxnormal, weekmaxeff;
@@ -215,31 +219,31 @@
             data.addColumn('number', 'MaxScore');
             data.addColumn('number', 'Rendement');
             data.addColumn('number', 'TotalScore');
-            data.addRows(tdata.data.length);
-            for (var i = 0; i < tdata.data.length; i++)
+            data.addRows(tdata.length);
+            for (var i = 0; i < tdata.length; i++)
             {
-                data.setValue(i, 0, tdata.data[i][0]);
-                var tScore = parseFloat(tdata.data[i][1]);
-                var tBench = parseFloat(tdata.data[i][2]);
-                var tMax = parseFloat(tdata.data[i][3]);
+                data.setValue(i, 0, tdata[i].team_name);
+                var tScore = parseFloat(tdata[i].team_roundscore);
+                var tBench = parseFloat(tdata[i].team_benchscore);
+                var tMax = parseFloat(tdata[i].team_maxscore);
                 var tEff = Math.round(((tScore / tMax ) * 100)*100)/100;
                 data.setValue(i, 1, tScore);
                 data.setValue(i, 2, tBench);
                 data.setValue(i, 3, tMax);
                 data.setValue(i, 4, tEff);
-                data.setValue(i, 5, parseFloat(tdata.data[i][5]));
+                data.setValue(i, 5, parseFloat(tdata[i].team_totalscore));
 
                 if (i==0) {
-                    weekwinner = tdata.data[i][0];
+                    weekwinner = tdata[i].team_name;
                     winnerscore = tScore;
                     winnerbench = tBench;
                     winnereff = tEff;
-                    PCRound = tdata.data[i][4];
+                    PCRound = tdata[i].team_round;
                     UpdatePCData ( weekwinner, winnerscore, winnerbench, winnereff, "winner" );
                 }
 
                 if (winnerscore <= tMax && weekmaxscore <= tMax) {
-                    weekmaxwinner = tdata.data[i][0];
+                    weekmaxwinner = tdata[i].team_name;
                     weekmaxscore = tMax;
                     weekmaxnormal = tScore;
                     weekmaxeff = tEff;
@@ -247,7 +251,7 @@
 
                 if (tEff < wkGKT) {
                     wkGKT = tEff;
-                    gerardname = tdata.data[i][0];
+                    gerardname = tdata[i].team_name;
                     gerardscore = tScore;
                     gerardbench = tBench;
                     gerardeff  = tEff;
@@ -284,11 +288,9 @@
             if (utype == "winner") {
                 jQuery('#winnaaris').text(uname);
                 jQuery('#winnaarscore').text(uscore);
-                //jQuery('#winnaarbank').text(ubench);
                 jQuery('#winnaarrendement').text(ueff);
             } else if (utype = "gerardkemkers") {
                 jQuery('#gerardtroffee').text(uname);
-                //jQuery('#gerardscore').text(uscore);
                 jQuery('#gerardbank').text(ubench);
                 jQuery('#gerardrendement').text(ueff);
             }
@@ -303,16 +305,16 @@
             data.addColumn('number', 'Selectie?');
             data.addColumn('number', 'Opgesteld?');
             data.addColumn('number', 'Captain?');
-            data.addRows(tdata.data.length);
+            data.addRows(tdata.length);
 
-            console.log ('  Intermediate: processing player information for a total of: ' + tdata.data.length);
+            console.log ('  Intermediate: processing player information for a total of: ' + tdata.length);
 
-            for (var i = 0; i < tdata.data.length; i++)
+            for (var i = 0; i < tdata.length; i++)
             {
-                data.setValue(i, 0, tdata.data[i][0]);
-                var tInteams = parseFloat(tdata.data[i][1]);
-                var tTimesCaptain = parseFloat(tdata.data[i][2]);
-                var tBasisPlayer = parseFloat(tdata.data[i][3]);
+                data.setValue(i, 0, tdata[i].player_name);
+                var tInteams = parseFloat(tdata[i].in_teams);
+                var tTimesCaptain = parseFloat(tdata[i].iscaptain);
+                var tBasisPlayer = parseFloat(tdata[i].opgesteld);
                 data.setValue(i, 1, tInteams );
                 data.setValue(i, 2, tBasisPlayer );
                 data.setValue(i, 3, tTimesCaptain );
@@ -330,33 +332,32 @@
         function ProcessAdditionalInfo(tdata) {
 
             console.log ('START: Processing additional team information');
-
+						
             console.log ('  Intermediate: Sorting the array and adding additional information');
-            var data = tdata.data;
+            var data = tdata;
             // Sort on previous rank.
             var sorted = data.sort(function(a, b) {
-                return b[3] - a[3];
+                return b.previous_rndscore - a.previous_rndscore;
             });
             // Add extra column.
             var extraColumn = sorted.map(function(arrayRow, index) {
-                arrayRow[arrayRow.length] = index + 1;
+                arrayRow['PreviousRank'] = index + 1;
                 return arrayRow;
             });
             // Sort on current rank.
             var secondsort = extraColumn.sort(function(a, b) {
-                return b[2] - a[2];
+                return b.current_rndscore - a.current_rndscore;
             });
             // Add extra extra column.
             var secondColumn = secondsort.map(function(arrayRow, index) {
-                arrayRow[arrayRow.length] = index + 1;
+                arrayRow['CurrentRank'] = index + 1;
                 return arrayRow;
             });
             // Add count/diff column.
             var diffColumn = secondsort.map(function(arrayRow, index) {
-                arrayRow[arrayRow.length] = arrayRow[4]-arrayRow[5];
+                arrayRow['Diff_prev_cur'] = arrayRow['PreviousRank']-arrayRow['CurrentRank'];
                 return arrayRow;
             });
-
             console.log ('  Intermediate: Creating Google DataTable and add the additional information');
             var data = new google.visualization.DataTable();
             data.addColumn('string', 'Teamname');
@@ -369,18 +370,13 @@
 
             for (var i = 0; i < diffColumn.length; i++)
             {
-                console.log(diffColumn[i][0]);
-                console.log(diffColumn[i][2]);
-                console.log(diffColumn[i][3]);
-                console.log(diffColumn[i][4]);
-                console.log(diffColumn[i][5]);
-                console.log(diffColumn[i][6]);
-                data.setValue(i, 0, diffColumn[i][0] );
-                data.setValue(i, 1, diffColumn[i][3] );
-                data.setValue(i, 2, diffColumn[i][4] );
-                data.setValue(i, 3, diffColumn[i][2] );
-                data.setValue(i, 4, diffColumn[i][5] );
-                data.setValue(i, 5, diffColumn[i][6] );
+								//Columnnames: team_name, team_round, current_rndscore, previous_rndscore, PreviousRank, CurrentRank, Diff_prev_cur
+                data.setValue(i, 0, diffColumn[i]['team_name'] );
+                data.setValue(i, 1, diffColumn[i]['previous_rndscore'] );
+                data.setValue(i, 2, diffColumn[i]['PreviousRank'] );
+                data.setValue(i, 3, diffColumn[i]['current_rndscore'] );
+                data.setValue(i, 4, diffColumn[i]['CurrentRank'] );
+                data.setValue(i, 5, diffColumn[i]['Diff_prev_cur'] );
 
             }
 
